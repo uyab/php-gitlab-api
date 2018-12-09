@@ -74,6 +74,37 @@ class Users extends AbstractApi
     }
 
     /**
+     * @param int $id
+     * @return mixed
+     */
+    public function events($id, $parameters = [])
+    {
+        $resolver = $this->createOptionsResolver();
+        $datetimeNormalizer = function (Options $resolver, \DateTimeInterface $value) {
+            return $value->format('Y-m-d');
+        };
+
+        $resolver->setDefined('action')
+                 ->setAllowedValues('action', ['created', 'updated', 'closed', 'reopened', 'pushed', 'commented', 'merged', 'joined', 'left', 'destroyed', 'expired'])
+        ;
+        $resolver->setDefined('target_type')
+                 ->setAllowedValues('target_type', ['issue', 'milestone', 'merge_request', 'note', 'project', 'snippet', 'user'])
+        ;
+        $resolver->setDefined('before')
+                 ->setAllowedTypes('before', \DateTimeInterface::class)
+                 ->setNormalizer('before', $datetimeNormalizer);
+        $resolver->setDefined('after')
+                 ->setAllowedTypes('after', \DateTimeInterface::class)
+                 ->setNormalizer('after', $datetimeNormalizer)
+        ;
+        $resolver->setDefined('sort')
+                 ->setAllowedValues('sort', ['asc', 'desc'])
+        ;
+
+        return $this->get('users/'.$this->encodePath($id).'/events', $resolver->resolve($parameters));
+    }
+
+    /**
      * @return mixed
      */
     public function user()
